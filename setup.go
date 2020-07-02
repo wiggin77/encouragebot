@@ -22,7 +22,8 @@ func setup(cfg Config) (*BotInfo, error) {
 		return nil, err
 	}
 
-	if _, err := login(clientAdmin, cfg.AdminUsername, cfg.AdminPassword); err != nil {
+	admin, err := login(clientAdmin, cfg.AdminUsername, cfg.AdminPassword)
+	if err != nil {
 		return nil, err
 	}
 
@@ -31,7 +32,17 @@ func setup(cfg Config) (*BotInfo, error) {
 		return nil, err
 	}
 
-	bot, err := createBotIfNeeded(clientAdmin, cfg)
+	err = addUserToTeamIfNeeded(clientAdmin, admin.Id, team.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	bot, err := createBotIfNeeded(clientAdmin, team, cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	err = addUserToTeamIfNeeded(clientAdmin, bot.UserId, team.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -90,30 +101,39 @@ func createTeamIfNeeded(clientAdmin *model.Client4, teamName string) (*model.Tea
 			return nil, fmt.Errorf("failed to create team: %w", resp.Error)
 		}
 	}
+
 	return team, nil
 }
 
-func createBotIfNeeded(clientAdmin *model.Client4, cfg Config) (*model.Bot, error) {
-	botId := botUsernameToId(clientAdmin, cfg.BotUsername)
-	if botId == "" {
-		bot := &model.Bot{
+func createBotIfNeeded(clientAdmin *model.Client4, team *model.Team, cfg Config) (*model.Bot, error) {
+	var bot *model.Bot
+	var resp *model.Response
+
+	bot, err := getBotByUsername(clientAdmin, cfg.BotUsername)
+	if err != nil {
+		bot = &model.Bot{
 			Description: cfg.BotDescription,
 			DisplayName: cfg.BotDisplayname,
 			Username:    cfg.BotUsername,
 		}
 
-		bot, resp := clientAdmin.CreateBot(bot)
+		bot, resp = clientAdmin.CreateBot(bot)
 		if resp.Error != nil {
 			return nil, fmt.Errorf("failed to create bot: %w", resp.Error)
 		}
-		botId = bot.UserId
-	}
-
-	bot, resp := clientAdmin.GetBot(botId, "")
-	if resp.Error != nil {
-		return nil, fmt.Errorf("failed to get bot: %w", resp.Error)
 	}
 	return bot, nil
+}
+
+func addUserToTeamIfNeeded(clientAdmin *model.Client4, userId string, teamId string) error {
+	_, resp := clientAdmin.GetTeamMember(teamId, userId, "")
+	if resp.Error != nil {
+		_, resp = clientAdmin.AddTeamMember(teamId, userId)
+		if resp.Error != nil {
+			return fmt.Errorf("failed to add user %s to team %s: %w", userId, teamId, resp.Error)
+		}
+	}
+	return nil
 }
 
 func createChannelIfNeeded(clientAdmin *model.Client4, name string, teamId string) (*model.Channel, error) {
@@ -132,16 +152,16 @@ func createChannelIfNeeded(clientAdmin *model.Client4, name string, teamId strin
 	return channel, nil
 }
 
-func botUsernameToId(clientAdmin *model.Client4, username string) string {
+func getBotByUsername(clientAdmin *model.Client4, username string) (*model.Bot, error) {
 	bots, resp := clientAdmin.GetBots(0, 10000, "")
 	if resp.Error != nil {
-		return ""
+		return nil, fmt.Errorf("failed to get list of bots: %w", resp.Error)
 	}
 
 	for _, bot := range bots {
 		if bot.Username == username {
-			return bot.UserId
+			return bot, nil
 		}
 	}
-	return ""
+	return nil, fmt.Errorf("failed to get bot %s", username)
 }
