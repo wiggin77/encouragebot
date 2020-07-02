@@ -19,7 +19,7 @@ var data = []string{
 	"That was a great post!",
 	"You have a way with words.",
 	"I see the deeper meaning in that post.",
-	"You are the Mark Twain of Mattermost",
+	"You are the Mark Twain of Mattermost.",
 	"That was an astute comment.",
 	"You've written another gem.",
 	"I like your style.",

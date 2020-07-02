@@ -10,34 +10,23 @@ const (
 	DEF_SERVER_DOMAIN = "localhost"
 	DEF_SERVER_PORT   = 8065
 
-	DEF_ADMIN_USERNAME = "dlauder"
-	DEF_ADMIN_PASSWORD = "hello"
-
-	//BOT_USER_EMAIL    = "bot@example.com"
-	//BOT_USER_PASSWORD = "password1"
-	//BOT_USER_USERNAME = "samplebot"
-	//BOT_USER_FIRST    = "Sample"
-	//BOT_USER_LAST     = "Bot"
-
-	BOT_USERNAME         = "encouragebot"
-	BOT_DISPLAYNAME      = "Encourage Bot"
-	BOT_DESCRIPTION      = "Encourage Bot is encouraging."
-	DEF_BOT_ACCESS_TOKEN = "mo1bx4u6k3rx3bbmc5as1y8zsc"
+	BOT_USERNAME         = "encourage-bot"
+	BOT_USERID           = "fmh11pq9ei8g8fkkkxsxnnoj1y"
+	DEF_BOT_ACCESS_TOKEN = "gmxeqimj8f8atjicuyabpo6f5r"
 
 	DEF_TEAM_NAME    = "encourage-team"
-	CHANNEL_LOG_NAME = "debugging-for-encourage-bot"
+	CHANNEL_LOG_NAME = "encourage-bot-log"
+
+	TEAM_ID        = "fnrmpodiet8yzfhapdgnejh9nc"
+	LOG_CHANNEL_ID = "f8z6efmy5t8wmx1dsr6goge9cw"
 )
 
 type Config struct {
 	ServerUrl    string
 	WebSocketUrl string
 
-	AdminUsername string
-	AdminPassword string
-
 	BotUsername    string
-	BotDisplayname string
-	BotDescription string
+	BotUserId      string
 	BotAccessToken string
 
 	TeamName       string
@@ -47,9 +36,7 @@ type Config struct {
 func getConfig() Config {
 	cfg := &Config{
 		BotUsername:    BOT_USERNAME,
-		BotDisplayname: BOT_DISPLAYNAME,
-		BotDescription: BOT_DESCRIPTION,
-		BotAccessToken: DEF_BOT_ACCESS_TOKEN,
+		BotUserId:      BOT_USERID,
 		LogChannelName: CHANNEL_LOG_NAME,
 	}
 
@@ -61,10 +48,8 @@ func getConfig() Config {
 	fs.StringVar(&domain, "domain", DEF_SERVER_DOMAIN, "IP/domain of Mattermost server")
 	fs.IntVar(&port, "port", DEF_SERVER_PORT, "port of MatterMost server")
 	fs.BoolVar(&https, "https", false, "use HTTPS to connect")
-	fs.StringVar(&cfg.AdminUsername, "admin_username", DEF_ADMIN_USERNAME, "username of admin user")
-	fs.StringVar(&cfg.AdminPassword, "admin_password", DEF_ADMIN_PASSWORD, "password of admin user")
 	fs.StringVar(&cfg.TeamName, "team", DEF_TEAM_NAME, "team name")
-	fs.StringVar(&cfg.BotAccessToken, "bot_access_token", "", "bot access token")
+	fs.StringVar(&cfg.BotAccessToken, "bot_access_token", DEF_BOT_ACCESS_TOKEN, "bot access token")
 
 	err := fs.Parse(os.Args[1:])
 	if err == flag.ErrHelp {

@@ -27,15 +27,15 @@ func main() {
 	}
 
 	msg := fmt.Sprintf("_%s has **started** running_", BOT_APP_NAME)
-	err = sendMsgToChannel(msg, botInfo.logChannel.Id, "", botInfo)
+	err = sendMsgToChannel(msg, botInfo.logChannelId, "", botInfo)
 	if err != nil {
 		printErrorAndExit(err, 2)
 	}
 
 	// Start listening to some channels via the websocket!
-	webSocketClient, err := model.NewWebSocketClient4(cfg.WebSocketUrl, botInfo.client.AuthToken)
-	if err != nil {
-		printErrorAndExit(fmt.Errorf("failed to connect to websocket: %w", err), 2)
+	webSocketClient, appErr := model.NewWebSocketClient4(cfg.WebSocketUrl, botInfo.client.AuthToken)
+	if appErr != nil {
+		printErrorAndExit(fmt.Errorf("failed to connect to websocket: %w", appErr), 2)
 	}
 
 	setupGracefulShutdown(webSocketClient, botInfo)
@@ -54,7 +54,7 @@ func main() {
 func sendMsgToChannel(msg string, channelId, replyId string, botInfo *BotInfo) error {
 	post := &model.Post{}
 	post.ChannelId = channelId
-	post.ParentId = replyId
+	post.RootId = replyId
 	post.Message = msg
 
 	if _, resp := botInfo.client.CreatePost(post); resp.Error != nil {
@@ -74,7 +74,7 @@ func handleWebSocketResponse(event *model.WebSocketEvent, botInfo *BotInfo) {
 	post := model.PostFromJson(strings.NewReader(event.Data["post"].(string)))
 	if post != nil {
 		// ignore my events
-		if post.UserId == botInfo.botUser.Id {
+		if post.UserId == botInfo.botUserId {
 			return
 		}
 
@@ -117,7 +117,7 @@ func setupGracefulShutdown(wsc *model.WebSocketClient, botInfo *BotInfo) {
 			}
 
 			msg := fmt.Sprintf("_%s has **stopped** running_", BOT_APP_NAME)
-			_ = sendMsgToChannel(msg, botInfo.logChannel.Id, "", botInfo)
+			_ = sendMsgToChannel(msg, botInfo.logChannelId, "", botInfo)
 			os.Exit(0)
 		}
 	}()
