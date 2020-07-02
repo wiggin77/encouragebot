@@ -47,13 +47,13 @@ func setup(cfg Config) (*BotInfo, error) {
 		return nil, err
 	}
 
-	channel, err := createChannelIfNeeded(clientAdmin, cfg.TeamName, team.Id)
+	channel, err := createChannelIfNeeded(clientAdmin, cfg.LogChannelName, team.Id)
 	if err != nil {
 		return nil, err
 	}
 
 	client := model.NewAPIv4Client(cfg.ServerUrl)
-	user, err := login(client, bot.Username, "")
+	user, err := login(client, bot.Username, cfg.BotAccessToken)
 	if err != nil {
 		return nil, err
 	}
